@@ -6,6 +6,11 @@
       "dom.iterable",
       "esnext"
     ],
+    "types": [
+      "gapi",
+      "gapi.auth2",
+      "gapi.client.sheets",
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,

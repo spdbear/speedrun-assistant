@@ -7,9 +7,11 @@ import {
   Input,
   Grid,
   theme,
+  Button
 } from "@chakra-ui/react";
 import { ColorModeSwitcher } from "./ColorModeSwitcher";
 import { Data } from "./types/Data";
+import { getSheetData, authenticate }from "./client/spreadsheet"
 
 const data: Data[] = [
   {
@@ -180,7 +182,6 @@ const generateTodoList = (data: Data[], id: number) =>
 
 export const App = () => {
   const [currentId, setCurrentId] = useState(1);
-
   return (
     <ChakraProvider theme={theme}>
       <Box textAlign="center" fontSize="xl">
@@ -191,6 +192,8 @@ export const App = () => {
             type="number"
             onChange={(event) => setCurrentId(parseInt(event.target.value, 10))}
           />
+          <Button onClick={authenticate}> Authenticate </Button>
+          <Button onClick={getSheetData}> Get Data </Button>
           <VStack spacing={2}>
             <Heading>{data.find((e) => e.id === currentId)?.split}</Heading>
             <ul>{generateTodoList(data, currentId)}</ul>
