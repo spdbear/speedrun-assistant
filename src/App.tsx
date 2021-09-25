@@ -15,38 +15,7 @@ import {
   theme,
 } from "@chakra-ui/react";
 import { ColorModeSwitcher } from "./ColorModeSwitcher";
-
-type TodoEquip = {
-  type: "equip";
-  content: string;
-};
-type TodoAction = {
-  type: "action";
-  content: string;
-  notes?: string;
-  eid?: number;
-};
-type TodoMove = {
-  type: "move";
-  content: string;
-  notes?: string;
-};
-type TodoPic = {
-  type: "pic";
-  pid: number;
-};
-type TodoCoin = {
-  type: "coin";
-  cid: number;
-};
-
-type Todos = TodoAction | TodoCoin | TodoEquip | TodoMove | TodoPic;
-
-type Data = {
-  id: number;
-  split: string;
-  todo: Todos[];
-};
+import { Data } from "./types/Data";
 
 const data: Data[] = [
   {
@@ -229,7 +198,7 @@ export const App = () => {
             onChange={(event) => setCurrentId(parseInt(event.target.value, 10))}
           />
           <VStack spacing={2}>
-          <Heading>{data.find(e => e.id === currentId)?.split}</Heading>
+            <Heading>{data.find((e) => e.id === currentId)?.split}</Heading>
             <ul>{generateTodoList(data, currentId)}</ul>
           </VStack>
         </Grid>
