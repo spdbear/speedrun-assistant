@@ -1,0 +1,12 @@
+{
+  "name": "ws-mock",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.2.2"
+  },
+  "devDependencies": {
+    "@types/ws": "^7.4.7"
+  }
+}
