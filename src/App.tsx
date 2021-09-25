@@ -1,14 +1,8 @@
 import React, { useState } from "react";
 import {
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
-  CloseButton,
   Heading,
   ChakraProvider,
   Box,
-  Link,
   VStack,
   Input,
   Grid,
