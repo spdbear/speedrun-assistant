@@ -1,168 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Heading,
   ChakraProvider,
   Box,
   VStack,
-  Input,
   Grid,
   theme,
-  Button
+  Text,
 } from "@chakra-ui/react";
 import { ColorModeSwitcher } from "./ColorModeSwitcher";
 import { Data } from "./types/Data";
-import { getSheetData, authenticate }from "./client/spreadsheet"
+// import { getSheetData, authenticate } from "./client/spreadsheet";
 
 const data: Data[] = [
   {
     id: 1,
-    split: "ジェットタービン",
+    split: "区間1",
     todo: [
-      {
-        type: "action",
-        content: "アクセルの家へ",
-        notes: "Vジャンプ1",
-      },
-      {
-        type: "coin",
-        cid: 6,
-      },
-      {
-        type: "move",
-        content: "道に沿って東へ進む",
-      },
-      {
-        type: "action",
-        content: "ボトルを拾う",
-      },
-      {
-        type: "coin",
-        cid: 94,
-      },
-      {
-        type: "coin",
-        cid: 99,
-      },
-      {
-        type: "action",
-        content: "Q'sファクトリーへ",
-      },
-      {
-        type: "action",
-        content: "ココナッツ屋へ",
-        notes: "決定ボタンを連打",
-      },
-      {
-        type: "action",
-        content: "サンドロの家へ",
-      },
-      {
-        type: "coin",
-        cid: 98,
-      },
-      {
-        type: "action",
-        content: "ケロリと話す",
-      },
-      {
-        type: "move",
-        content: "崖を登る",
-        notes: "安定を取る場合はQ'sから入りなおす",
-      },
-      {
-        type: "action",
-        content: "サンドロの家へ",
-        eid: 81,
-      },
-      {
-        type: "action",
-        content: "ピーチタウンへワープ",
-      },
+      { type: "action", content: "「はじめから」でタイマースタート" },
+      { type: "action", content: "東へ向かう" },
+      { type: "action", content: "hoge村に入る" },
+      { type: "action", content: "剣と盾を買う" },
+      { type: "action", content: "剣と盾を買う" },
     ],
   },
   {
     id: 2,
-    split: "アイランドブリッジ",
+    split: "区間2",
     todo: [
-      {
-        type: "equip",
-        content: "ジェットタービン",
-      },
-      {
-        type: "move",
-        content: "南へ向かう",
-      },
-      {
-        type: "pic",
-        pid: 8,
-      },
-      {
-        type: "coin",
-        cid: 16,
-      },
-      {
-        type: "pic",
-        pid: 12,
-      },
-      {
-        type: "coin",
-        cid: 17,
-      },
-      {
-        type: "coin",
-        cid: 18,
-      },
-      {
-        type: "pic",
-        pid: 13,
-      },
-      {
-        type: "pic",
-        pid: 14,
-      },
-      {
-        type: "move",
-        content: "西の海岸へ向かう",
-      },
-      {
-        type: "coin",
-        cid: 20,
-      },
-      {
-        type: "action",
-        content: "トパーズを拾う",
-      },
-      {
-        type: "coin",
-        cid: 21,
-      },
-      {
-        type: "pic",
-        pid: 16,
-      },
-      {
-        type: "pic",
-        pid: 15,
-      },
-      {
-        type: "coin",
-        cid: 19,
-      },
-      {
-        type: "move",
-        content: "橋を渡る",
-      },
-      {
-        type: "action",
-        content: "Q'sファクトリーへ",
-      },
+      { type: "action", content: "レベルを10まで上げる" },
+      { type: "action", content: "お金を1000Gまで稼ぐ" },
+      { type: "action", content: "ボスを倒す" },
+    ],
+  },
+  {
+    id: 3,
+    split: "区間3",
+    todo: [
+      { type: "action", content: "西へ向かう" },
+      { type: "action", content: "ラストダンジョンに入る" },
+      { type: "action", content: "最強の剣を手に入れる" },
+      { type: "action", content: "ラスボスを倒す" },
+      { type: "action", content: "エンディングが流れたらタイマーストップ" },
     ],
   },
 ];
 
-const generateTodoList = (data: Data[], id: number) =>
+const generateTodoList = (data: Data[], splitName: string) =>
   data
-    .filter((e) => e.id === id)
+    .filter((e) => e.split === splitName)
     .flatMap((e) => e.todo)
     .map((el) => {
       if (el.type === "action") {
@@ -176,27 +62,72 @@ const generateTodoList = (data: Data[], id: number) =>
       } else if (el.type === "equip") {
         return <li>装備: {el.content}</li>;
       } else {
-        return <li>err</li>;
+        return <li>error</li>;
       }
     });
 
 export const App = () => {
-  const [currentId, setCurrentId] = useState(1);
+  const url = "ws://localhost:16835/livesplit";
+  const client = new WebSocket(url);
+
+  useEffect(() => {
+    const commandList = ["start", "split", "skipSplit", "undoSplit", "reset"];
+
+    client.onopen = () => {
+      console.log(`Success to connect ${url}`);
+      client.send(`registerEvent ${commandList.join(" ")}`);
+    };
+
+    client.onmessage = (message) => {
+      const data = JSON.parse(message.data);
+      const name = data.name;
+      switch (name) {
+        case "getdelta":
+          setCurrentDelta(data.data);
+          console.log(`delta: ${data.data / 1000}s`);
+          break;
+        case "getcurrentsplitname":
+          setCurrentSplitName(data.data);
+          console.log(`name: ${data.data}`);
+          break;
+        case "getcurrenttime":
+          setCurrentTime(data.data);
+          console.log(`last split time: ${data.data / 1000}s`);
+          break;
+      }
+      console.log(data);
+      if (commandList.includes(name)) {
+        if (name === "reset") {
+          setCurrentDelta(0);
+          setCurrentTime(0);
+          setCurrentSplitName("");
+          return;
+        }
+        client.send("getdelta");
+        client.send("getcurrentsplitname");
+        client.send("getcurrenttime");
+      }
+    };
+    console.log(`Started WS Client to ${url}`);
+  }, []);
+  const [currentSplitName, setCurrentSplitName] = useState("");
+  const [currentTime, setCurrentTime] = useState(0);
+  const [currentDelta, setCurrentDelta] = useState(0);
   return (
     <ChakraProvider theme={theme}>
-      <Box textAlign="center" fontSize="xl">
+      <Box fontSize="xl">
         <Grid minH="100vh" p={3}>
           <ColorModeSwitcher justifySelf="flex-end" />
-          <Input
-            value={currentId}
-            type="number"
-            onChange={(event) => setCurrentId(parseInt(event.target.value, 10))}
-          />
-          <Button onClick={authenticate}> Authenticate </Button>
-          <Button onClick={getSheetData}> Get Data </Button>
+          {/* <Button onClick={authenticate}> Authenticate </Button> */}
+          {/* <Button onClick={getSheetData}> Get Data </Button> */}
           <VStack spacing={2}>
-            <Heading>{data.find((e) => e.id === currentId)?.split}</Heading>
-            <ul>{generateTodoList(data, currentId)}</ul>
+            <Text>
+              Time: {currentTime / 1000}s, +/-: {currentDelta / 1000}s
+            </Text>
+            <Heading>
+              {data.find((e) => e.split === currentSplitName)?.split}
+            </Heading>
+            <ul>{generateTodoList(data, currentSplitName)}</ul>
           </VStack>
         </Grid>
       </Box>
