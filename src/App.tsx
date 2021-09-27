@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Heading,
   ChakraProvider,
@@ -181,7 +181,46 @@ const generateTodoList = (data: Data[], id: number) =>
     });
 
 export const App = () => {
-  const [currentId, setCurrentId] = useState(1);
+  useEffect(() => {
+    const commandList = ["start", "split", "skipSplit", "undoSplit", "reset"];
+
+    client.onopen = () => {
+      console.log(`Success to connect ${url}`);
+      client.send(`registerEvent ${commandList.join(" ")}`);
+    };
+
+    client.onmessage = (message) => {
+      const data = JSON.parse(message.data);
+      const name = data.name;
+      switch (name) {
+        case "getdelta":
+          setCurrentDelta(data.data);
+          console.log(`delta: ${data.data / 1000}s`);
+          break;
+        case "getcurrentsplitname":
+          setCurrentSplitName(data.data);
+          console.log(`name: ${data.data}`);
+          break;
+        case "getcurrenttime":
+          setCurrentTime(data.data);
+          console.log(`last split time: ${data.data / 1000}s`);
+          break;
+      }
+      console.log(data);
+      if (commandList.includes(name)) {
+        if(name === "reset"){
+          setCurrentDelta(0);
+          setCurrentTime(0);
+          setCurrentSplitName("");
+          return 
+        }
+        client.send("getdelta");
+        client.send("getcurrentsplitname");
+        client.send("getcurrenttime");
+      }
+    };
+    console.log(`Started WS Client to ${url}`);
+  }, []);
   return (
     <ChakraProvider theme={theme}>
       <Box textAlign="center" fontSize="xl">
